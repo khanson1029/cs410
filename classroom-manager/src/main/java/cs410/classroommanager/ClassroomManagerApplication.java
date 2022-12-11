@@ -57,9 +57,8 @@ public class StudentManagement {
 			System.out.println("");
 		}
 		statement.close();
+		return resultSet;
 	}
-        return resultSet;
-}
 
 	@ShellMethod
 	public static resultSet ShowStudents(Connection connection) throws SQLException {
@@ -77,9 +76,8 @@ public class StudentManagement {
 			System.out.println("");
 		}
 		statement.close();
+		return resultSet;
 	}
-        return resultSet;
-}
 
 	@ShellMethod
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
@@ -91,7 +89,4 @@ public class StudentManagement {
 		statement.execute();
 		statement.close();
 	}
-
-
-
 }
