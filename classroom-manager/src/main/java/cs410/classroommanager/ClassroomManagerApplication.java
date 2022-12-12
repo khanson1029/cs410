@@ -5,16 +5,15 @@ import java.io.*;
 import java.sql.Date;
 import java.util.*;
 
-public class ClassroomManagerApplication{
+public class ClassroomManagerApplication {
 
 	private static int num;
 	private static double dub;
-	private int c;
 	private Statement statement;
 	private Connection connection;
 	private static ResultSet resultSet;
 
-	public static void main (String args[]) throws ClassNotFoundException, SQLException {
+	public static void main(String args[]) throws ClassNotFoundException, SQLException {
 
 		Connection con = null;
 		Statement stmt = null;
@@ -48,10 +47,10 @@ public class ClassroomManagerApplication{
 				} else if (args[0].equals("ListClasses")) {
 					ListClasses(con);
 				} else if (args[0].equals("SelectClass")) {
-					if(args.length == 4){
+					if (args.length == 4) {
 						dub = Integer.parseInteger(args[3]);
 						SelectClass(con, args[1], args[2], dub);
-					} else if (args.length == 3){
+					} else if (args.length == 3) {
 						SelectClass(con, args[1], args[2]);
 					} else {
 						SelectClass(con, args[1]);
@@ -71,14 +70,14 @@ public class ClassroomManagerApplication{
 					num = Integer.parseInteger(args[4]);
 					AddAssignment(con, args[1], args[2], args[3], num);
 				} else if (args[0].equals("AddStudent")) {
-					if(args.length == 5){
+					if (args.length == 5) {
 						num = Integer.parseInteger(args[2]);
 						AddStudent(con, args[1], num, args[3], args[4]);
 					} else {
 						AddStudent(con, args[1]);
 					}
 				} else if (args[0].equals("ShowStudents")) {
-					if(args.length == 2){
+					if (args.length == 2) {
 						ShowStudents(con, args[1]);
 					} else {
 						ShowStudents(con);
@@ -93,34 +92,30 @@ public class ClassroomManagerApplication{
 				}
 			}
 			con.commit();
-		} catch( SQLException e ) {
+		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			con.rollback(); // In case of any exception, we roll back to the database state we had before starting this transaction
 		} finally {
 
-			if(stmt!=null)
+			if (stmt != null)
 				stmt.close();
 
-			if(stmt2!=null)
+			if (stmt2 != null)
 				stmt2.close();
-			if(con != null) {
+			if (con != null) {
 				con.setAutoCommit(true); // restore dafault mode
 				con.close();
 			}
 		}
 	}
 
-}
-
-public class ClassManagement{
-
 	public static void NewClass(Connection connection, String className, String term, int section, String description) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call NewClass(?,?,?,?)}");
-		statement.setString(1,className);
-		statement.setString(2,term);
-		statement.setInt(3,section);
-		statement.setString(4,description);
+		statement.setString(1, className);
+		statement.setString(2, term);
+		statement.setInt(3, section);
+		statement.setString(4, description);
 		statement.execute();
 		statement.close();
 	}
@@ -221,11 +216,6 @@ public class ClassManagement{
 		return resultSet;
 	}
 
-}
-//END of CLASSMANAGEMENT
-
-public class CategoryandAssignmentManagment{
-
 	public static resultSet ShowCategories(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowCategories()}");
@@ -247,8 +237,8 @@ public class CategoryandAssignmentManagment{
 	public static void AddCategory(Connection connection, String name, double weight) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddCategory(?,?)}");
-		statement.setString(1,name);
-		statement.setDouble(2,weight);
+		statement.setString(1, name);
+		statement.setDouble(2, weight);
 		statement.execute();
 		statement.close();
 	}
@@ -275,25 +265,22 @@ public class CategoryandAssignmentManagment{
 	public static void AddAssignment(Connection connection, String name, String category, String description, int points) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddAssignment(?,?,?,?)}");
-		statement.setString(1,name);
-		statement.setString(2,category);
-		statement.setString(3,description);
-		statement.setInt(4,points);
+		statement.setString(1, name);
+		statement.setString(2, category);
+		statement.setString(3, description);
+		statement.setInt(4, points);
 		statement.execute();
 		statement.close();
 	}
-}
-//END CATEGORY AND ASSIGNMENT MANAGEMENT
 
-public class StudentManagement {
 
 	public static void AddStudent(Connection connection, String username, int studentID, String last, String first) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?,?,?,?)}");
-		statement.setString(1,code);
-		statement.setString(2,studentID);
-		statement.setDouble(3,last);
-		statement.setString(4,first);
+		statement.setString(1, code);
+		statement.setString(2, studentID);
+		statement.setDouble(3, last);
+		statement.setString(4, first);
 		statement.execute();
 		statement.close();
 	}
@@ -301,7 +288,7 @@ public class StudentManagement {
 	public static void AddStudent(Connection connection, String username) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?)}");
-		statement.setString(1,username);
+		statement.setString(1, username);
 		statement.execute();
 		statement.close();
 	}
@@ -346,16 +333,13 @@ public class StudentManagement {
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call Grade(?,?,?)}");
-		statement.setString(1,assignmentName);
-		statement.setString(2,username);
-		statement.setInt(3,grade);
+		statement.setString(1, assignmentName);
+		statement.setString(2, username);
+		statement.setInt(3, grade);
 		statement.execute();
 		statement.close();
 	}
-}
-//END STUDENT MANAGEMENT
 
-public class GradeReporting{
 
 	public static resultSet StudentGrades(Connection connection, String username) throws SQLException {
 
@@ -395,4 +379,3 @@ public class GradeReporting{
 		return resultSet;
 	}
 }
-//END GradeReporting
