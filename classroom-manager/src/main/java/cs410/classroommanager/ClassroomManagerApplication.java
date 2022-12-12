@@ -1,25 +1,107 @@
 package cs410.classroommanager;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.shell.standard.ShellComponent;
-import org.springframework.shell.standard.ShellMethod;
+public class ClassroomManagerApplication{
 
-@SpringBootApplication
-public class ClassroomManagerApplication {
+	public static void main (String args[]) throws ClassNotFoundException, SQLException {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ClassroomManagerApplication.class, args);
+		Connection con = null;
+		Statement stmt = null;
+		Statement stmt2 = null;
+
+		try {
+			int nRemotePort = 57283;// remote port number of your database
+			String strDbPassword = "";// database login password
+			String dbName = "CS410";
+
+			/*
+			 * STEP 1 and 2
+			 * LOAD the Database DRIVER and obtain a CONNECTION
+			 * */
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			System.out.println("jdbc:mysql://localhost:" + nRemotePort + "/CS410?verifyServerCertificate=false&useSSL=true");
+			con = DriverManager.getConnection("jdbc:mysql://localhost:" + nRemotePort + "/CS410?verifyServerCertificate=false&useSSL=true&serverTimezone=UTC", "msandbox",
+					strDbPassword);
+			// Do something with the Connection
+
+			//jdbc:mysql://localhost:" + nRemotePort + "/FinalProject?verifyServerCertificate=false&useSSL=true?serverTimezone=UTC
+
+			con.setAutoCommit(false);
+
+			if (args[0] == "/?") {
+				System.out.println(Usage);
+			} else {
+				if (args[0].equals("NewClass")) {
+					dub = Integer.parseInteger(args[2]);
+					NewClass(con, args[1], dub, args[3], args[4]);
+				} else if (args[0].equals("ListClasses")) {
+					ListClasses(con);
+				} else if (args[0].equals("SelectClass")) {
+					if(args.length == 4){
+						dub = Integer.parseInteger(args[3]);
+						SelectClass(con, args[1], args[2], dub);
+					} else if (args.length == 3){
+						SelectClass(con, args[1], args[2]);
+					} else {
+						SelectClass(con, args[1]);
+					}
+				} else if (args[0].equals("ShowClass")) {
+					ShowClass(con);
+				} else if (args[0].equals("ShowCategories")) {
+					ShowCategories(con);
+				} else if (args[0].equals("GetPurchases")) {
+					GetPurchases(con, args[1]);
+				} else if (args[0].equals("ShowAssignment")) {
+					ShowAssignment(con);
+				} else if (args[0].equals("AddCategory")) {
+					dub = Double.parseDouble(arg[2]);
+					AddCategory(con, args[1], dub);
+				} else if (args[0].equals("AddAssignment")) {
+					dub = Integer.parseInteger(args[4]);
+					AddAssignment(con, args[1], args[2], args[3], dub);
+				} else if (args[0].equals("AddStudent")) {
+					if(args.length == 5){
+						dub = Integer.parseInteger(args[2]);
+						AddStudent(con, args[1], dub, args[3], args[4]);
+					} else {
+						AddStudent(con, args[1]);
+					}
+				} else if (args[0].equals("ShowStudents")) {
+					if(args.length == 2){
+						ShowStudents(con, args[1]);
+					} else {
+						ShowStudents(con);
+					}
+				} else if (args[0].equals("Grade")) {
+					dub = Integer.parseInteger(args[3]);
+					Grade(con, args[1], args[2], dub);
+				} else if (args[0].equals("StudentGrades")) {
+					StudentGrades(con, args[1]);
+				} else if (args[0].equals("GradeBook")) {
+					GradeBook(con);
+				}
+			}
+			con.commit();
+		} catch( SQLException e ) {
+			System.out.println(e.getMessage());
+			con.rollback(); // In case of any exception, we roll back to the database state we had before starting this transaction
+		} finally {
+
+			if(stmt!=null)
+				stmt.close();
+
+			if(stmt2!=null)
+				stmt2.close();
+			if(con != null) {
+				con.setAutoCommit(true); // restore dafault mode
+				con.close();
+			}
+		}
 	}
-
-
 
 }
 
-@Shell Component
 public class ClassManagement{
 
-	@ShellMethod
 	public static void NewClass(Connection connection, String className, String term, int section, String description) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call NewClass(?,?,?,?)}");
@@ -31,8 +113,7 @@ public class ClassManagement{
 		statement.close();
 	}
 
-	@ShellMethod
-	public static resultSet ListCLasses(Connection connection) throws SQLException {
+	public static resultSet ListClasses(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ListClasses()}");
 		resultSet = statement.executeQuery();
@@ -50,7 +131,6 @@ public class ClassManagement{
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static resultSet SelectClass(Connection connection, String classname) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?)}");
@@ -70,36 +150,11 @@ public class ClassManagement{
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static resultSet SelectClass(Connection connection, String classname, String term) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?)}");
 		statement.setString(1, classname);
 		statement.setString(2, term);
-		statement.set
-				resultSet = statement.executeQuery();
-		ResultSetMetaData rsmd = resultSet.getMetaData();
-		int columnsNumber = rsmd.getColumnCount();
-		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
-				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
-			}
-			System.out.println("");
-		}
-		statement.close();
-		return resultSet;
-	}
-
-	@ShellMethod
-	public static resultSet SelectClass(Connection connection, String classname, String term, int section) throws SQLException {
-
-		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?,?)}");
-		statement.setString(1, classname);
-		statement.setString(2, term);
-		statement.setInt(3, section);
-		statement.set
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
@@ -115,7 +170,27 @@ public class ClassManagement{
 		return resultSet;
 	}
 
-	@ShellMethod
+	public static resultSet SelectClass(Connection connection, String classname, String term, int section) throws SQLException {
+
+		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?,?)}");
+		statement.setString(1, classname);
+		statement.setString(2, term);
+		statement.setInt(3, section);
+		resultSet = statement.executeQuery();
+		ResultSetMetaData rsmd = resultSet.getMetaData();
+		int columnsNumber = rsmd.getColumnCount();
+		while (resultSet.next()) {
+			for (int i = 1; i <= columnsNumber; i++) {
+				if (i > 1) System.out.print(",  ");
+				String columnValue = resultSet.getString(i);
+				System.out.print(columnValue);
+			}
+			System.out.println("");
+		}
+		statement.close();
+		return resultSet;
+	}
+
 	public static resultSet ShowClass(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowClass()}");
@@ -137,13 +212,10 @@ public class ClassManagement{
 }
 //END of CLASSMANAGEMENT
 
-@ShellComponent
 public class CategoryandAssignmentManagment{
 
-	@ShellMethod
 	public static resultSet ShowCategories(Connection connection) throws SQLException {
 
-		@ShellMethod
 		CallableStatement statement = connection.prepareCall("{call ShowCategories()}");
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
@@ -160,7 +232,6 @@ public class CategoryandAssignmentManagment{
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static void AddCategory(Connection connection, String name, double weight) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddCategory(?,?)}");
@@ -170,7 +241,6 @@ public class CategoryandAssignmentManagment{
 		statement.close();
 	}
 
-	@ShellMethod
 	public static resultSet ShowAssignment(Connection connection) throws SQLException {
 
 		@ShellMethod
@@ -190,7 +260,6 @@ public class CategoryandAssignmentManagment{
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static void AddAssignment(Connection connection, String name, String category, String description, int points) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddAssignment(?,?,?,?)}");
@@ -204,10 +273,8 @@ public class CategoryandAssignmentManagment{
 }
 //END CATEGORY AND ASSIGNMENT MANAGEMENT
 
-@ShellComponent
 public class StudentManagement {
 
-	@ShellMethod
 	public static void AddStudent(Connection connection, String username, int studentID, String last, String first) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?,?,?,?)}");
@@ -219,7 +286,6 @@ public class StudentManagement {
 		statement.close();
 	}
 
-	@ShellMethod
 	public static void AddStudent(Connection connection, String username) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?)}");
@@ -228,7 +294,6 @@ public class StudentManagement {
 		statement.close();
 	}
 
-	@ShellMethod
 	public static resultSet ShowStudents(Connection connection, String string) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents(?)}");
@@ -248,7 +313,6 @@ public class StudentManagement {
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static resultSet ShowStudents(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents()}");
@@ -267,7 +331,6 @@ public class StudentManagement {
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call Grade(?,?,?)}");
@@ -280,10 +343,8 @@ public class StudentManagement {
 }
 //END STUDENT MANAGEMENT
 
-@ShellComponent
 public class GradeReporting{
 
-	@ShellMethod
 	public static resultSet StudentGrades(Connection connection, String username) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call StudentGrades(?)}");
@@ -303,7 +364,6 @@ public class GradeReporting{
 		return resultSet;
 	}
 
-	@ShellMethod
 	public static resultSet GradeBook(Connection connection) throws SQLException {
 
 		@ShellMethod
