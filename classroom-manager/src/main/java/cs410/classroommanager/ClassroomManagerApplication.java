@@ -1,6 +1,18 @@
 package cs410.classroommanager;
+import java.security.DrbgParameters;
+import java.sql.*;
+import java.io.*;
+import java.sql.Date;
+import java.util.*;
 
 public class ClassroomManagerApplication{
+
+	private static int num;
+	private static double dub;
+	private int c;
+	private Statement statement;
+	private Connection connection;
+	private static ResultSet resultSet;
 
 	public static void main (String args[]) throws ClassNotFoundException, SQLException {
 
@@ -56,12 +68,12 @@ public class ClassroomManagerApplication{
 					dub = Double.parseDouble(arg[2]);
 					AddCategory(con, args[1], dub);
 				} else if (args[0].equals("AddAssignment")) {
-					dub = Integer.parseInteger(args[4]);
-					AddAssignment(con, args[1], args[2], args[3], dub);
+					num = Integer.parseInteger(args[4]);
+					AddAssignment(con, args[1], args[2], args[3], num);
 				} else if (args[0].equals("AddStudent")) {
 					if(args.length == 5){
-						dub = Integer.parseInteger(args[2]);
-						AddStudent(con, args[1], dub, args[3], args[4]);
+						num = Integer.parseInteger(args[2]);
+						AddStudent(con, args[1], num, args[3], args[4]);
 					} else {
 						AddStudent(con, args[1]);
 					}
@@ -72,8 +84,8 @@ public class ClassroomManagerApplication{
 						ShowStudents(con);
 					}
 				} else if (args[0].equals("Grade")) {
-					dub = Integer.parseInteger(args[3]);
-					Grade(con, args[1], args[2], dub);
+					num = Integer.parseInteger(args[3]);
+					Grade(con, args[1], args[2], num);
 				} else if (args[0].equals("StudentGrades")) {
 					StudentGrades(con, args[1]);
 				} else if (args[0].equals("GradeBook")) {
