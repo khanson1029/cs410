@@ -68,104 +68,87 @@ public class ClassroomManagerApplication {
 				if (command.equals("help")) {
 					System.out.println("-".repeat(38) + "Help" + "-".repeat(38));
 					System.out.println("test connection \n\tTests the database connection");
-	
-					System.out.println("list students \n\tlists all the students");
-					System.out.println("list classes \n\tlists all the classes");
-					System.out.println("list class_sections \n\tlists all the class_sections");
-					System.out.println("list class_registrations \n\tlists all the class_registrations");
-					System.out.println("list instructor <first_name> <last_name>\n\tlists all the classes taught by that instructor");
-	
-	
-					System.out.println("delete student <studentId> \n\tdeletes the student");
-					System.out.println("create student <first_name> <last_name> <birthdate> \n\tcreates a student");
-					System.out.println("register student <student_id> <class_section_id>\n\tregisters the student to the class section");
-	
-					System.out.println("submit grade <studentId> <class_section_id> <letter_grade> \n\tcreates a student");
+
+					//Class Management
+					System.out.println("NewClass <Class Name> <Term> <Section Number> \n\tcreates a new class");
+					System.out.println("ListClasses \n\tlists all the classes w/ number of attending students");
+					System.out.println("SelectClass <Class Name> \n\tselects the only section of <Class Name> in the most recent term, " +
+										"if there is only one such section; if there are multiple sections it fails.");
+					System.out.println("SelectClassTerm <Class Name> <Term> \n\tselects the only section of <Class Name> in <Term>;" +
+										"if there are multiple such sections, it fails.");
+					System.out.println("SelectClassSection <Class Name> <Term> <Section #> \n\tselects a specific section");
+					System.out.println("ShowClass \n\tlists all the currently active classes");
+
+					//Category and Assignment Management
+					System.out.println("ShowCategories \n\tlist the categories with their weights");
+					System.out.println("AddCategory <Category Name> <Weight> \n\tadd a new category");
+					System.out.println("ShowAssignment \n\tlist the assignments with their point values, grouped by category");
+					System.out.println("AddAssignment <Assignment Name> <Category> <Description> <Points> \n\tadd a new assignment");
+
+					//Student Management
+					System.out.println("AddStudent1 <Username> <studentId> <Last Name> <First Name> \n\tadds a student and enrolls" +
+										" them in the current class. If the student already exists, enroll them in the class");
+					System.out.println("AddStudent2 <Username> \n\tadds an already existing student to the current class");
+					System.out.println("ShowStudents1 \n\tshow all students in the current class");
+					System.out.println("ShowStudents2 <string> \n\tshow all students with ‘string’ in their name or username" +
+										"(case-insensitive)");
+					System.out.println("Grade <Assignment Name> <Username> <Grade> \n\tAssign a grade for the <assignment> " +
+										"update the grade if it already exists");
+
+					//Grade Reporting
+					System.out.println("StudentGrades <Username> \n\tshow student’s current grade: all assignments, visually " +
+										"grouped by category, with the student’s grade (if they have one)");
+					System.out.println("GradeBook  \n\tshow the current class’s gradebook: students (username, student ID, and name), " +
+										"along with their total grades in the class.");
+
+					//support functions
 					System.out.println("help \n\tlists help information");
 					System.out.println("quit \n\tExits the program");
+
 				} else if (command.equals("test") && commandArguments.get(0).equals("connection")) {
-				// 	Database.testConnection();
-				// } else if (command.equals("list")) {
-				// 	if (commandArguments.get(0).equals("students")) attemptToListStudents();
-				// 	if (commandArguments.get(0).equals("classes")) listAllClasses();
-				// 	if (commandArguments.get(0).equals("class_sections")) listAllClassSections();
-				// 	if (commandArguments.get(0).equals("class_registrations")) listAllClassRegistrations();
-				// 	if (commandArguments.get(0).equals("instructor")) {
-				// 		getAllClassesByInstructor(commandArguments.get(1), commandArguments.get(2));
-				// 	}
-				// } else if (command.equals("create")) {
-				// 	if (commandArguments.get(0).equals("student")) {
-				// 		createNewStudent(commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
-				// 	}
-				// } else if (command.equals("register")) {
-				// 	if (commandArguments.get(0).equals("student")) {
-				// 		registerStudent(commandArguments.get(1), commandArguments.get(2));
-				// 	}
-				// } else if (command.equals("submit")) {
-				// 	if (commandArguments.get(0).equals("grade")) {
-				// 		submitGrade(commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
-				// 	}
-				// } else if (command.equals("delete")) {
-				// 	if (commandArguments.get(0).equals("student")) {
-				// 		deleteStudent(commandArguments.get(1));
-				// 	}
-				// } else if (!(command.equals("quit") || command.equals("exit"))) {
-					System.out.println(command);
-					System.out.println("Command not found. Enter 'help' for list of commands");
+				 	Database.testConnection();
+				 } else if (command.equals("NewClass")) {
+				 		NewClass(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+				 } else if (command.equals("ListClasses")) {
+						ListClasses(con);
+				 } else if (command.equals("SelectClass")) {
+						SelectClass(con, commandArguments.get(0));
+				 } else if (command.equals("SelectClassTerm")) {
+						SelectClassTerm(con, commandArguments.get(0), commandArguments.get(1));
+				 } else if (command.equals("SelectClassSection")) {
+						SelectClassSection(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
+				 } else if (command.equals("ShowClass")) {
+						ShowClass(con);
+				 } else if (command.equals("ShowCategories")) {
+						ShowCategories(con);
+				 } else if (command.equals("ShowAssignment")) {
+						ShowAssignment(con);
+				 } else if (command.equals("AddCategory")) {
+						AddCategory(con, commandArguments.get(0), commandArguments.get(1));
+				 } else if (command.equals("AddAssignment")) {
+						AddAssignment(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+				 } else if (command.equals("AddStudent2")) {
+						AddStudent2(con, commandArguments.get(0));
+				 } else if (command.equals("AddStudent1")) {
+						AddStudent1(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+				 } else if (command.equals("ShowStudents1")) {
+						ShowStudents1(con);
+				 } else if (command.equals("ShowStudents2")) {
+						ShowStudents2(con, commandArguments.get(0));
+				 } else if (command.equals("Grade")) {
+						Grade(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
+				 } else if (command.equals("StudentGrades")) {
+						StudentGrades(con, commandArguments.get(0));
+				 } else if (command.equals("GradeBook")) {
+						GradeBook(con);
+				 } else if (!(command.equals("quit") || command.equals("exit"))) {
+						System.out.println(command);
+						System.out.println("Command not found. Enter 'help' for list of commands");
 				}
 				System.out.println("-".repeat(80));
 			} while (!(command.equals("quit") || command.equals("exit")));
-			System.out.println("Bye!");
-			// if (args[0] == "/?") {
-			// 	System.out.println(Usage);
-			// } else {
-			// 	if (args[0].equals("NewClass")) {
-			// 		num = Integer.parseInt(args[3]);
-			// 		NewClass(con, args[1], args[2], num, args[4]);
-			// 	} else if (args[0].equals("ListClasses")) {
-			// 		ListClasses(con);
-			// 	} else if (args[0].equals("SelectClass")) {
-			// 		if (args.length == 4) {
-			// 			num = Integer.parseInt(args[3]);
-			// 			SelectClass(con, args[1], args[2], num);
-			// 		} else if (args.length == 3) {
-			// 			SelectClass(con, args[1], args[2]);
-			// 		} else {
-			// 			SelectClass(con, args[1]);
-			// 		}
-			// 	} else if (args[0].equals("ShowClass")) {
-			// 		ShowClass(con);
-			// 	} else if (args[0].equals("ShowCategories")) {
-			// 		ShowCategories(con);
-			// 	} else if (args[0].equals("ShowAssignment")) {
-			// 		ShowAssignment(con);
-			// 	} else if (args[0].equals("AddCategory")) {
-			// 		dub = Double.parseDouble(args[2]);
-			// 		AddCategory(con, args[1], dub);
-			// 	} else if (args[0].equals("AddAssignment")) {
-			// 		num = Integer.parseInt(args[4]);
-			// 		AddAssignment(con, args[1], args[2], args[3], num);
-			// 	} else if (args[0].equals("AddStudent")) {
-			// 		if (args.length == 5) {
-			// 			num = Integer.parseInt(args[2]);
-			// 			AddStudent(con, args[1], num, args[3], args[4]);
-			// 		} else {
-			// 			AddStudent(con, args[1]);
-			// 		}
-			// 	} else if (args[0].equals("ShowStudents")) {
-			// 		if (args.length == 2) {
-			// 			ShowStudents(con, args[1]);
-			// 		} else {
-			// 			ShowStudents(con);
-			// 		}
-			// 	} else if (args[0].equals("Grade")) {
-			// 		num = Integer.parseInt(args[3]);
-			// 		Grade(con, args[1], args[2], num);
-			// 	} else if (args[0].equals("StudentGrades")) {
-			// 		StudentGrades(con, args[1]);
-			// 	} else if (args[0].equals("GradeBook")) {
-			// 		GradeBook(con);
-			// 	}
+				System.out.println("Bye!");
+
 			con.commit();
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -174,7 +157,6 @@ public class ClassroomManagerApplication {
 
 			if (stmt != null)
 				stmt.close();
-
 			if (stmt2 != null)
 				stmt2.close();
 			if (con != null) {
@@ -232,7 +214,7 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-	public static ResultSet SelectClass(Connection connection, String classname, String term) throws SQLException {
+	public static ResultSet SelectClassTerm(Connection connection, String classname, String term) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?)}");
 		statement.setString(1, classname);
@@ -252,7 +234,7 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-	public static ResultSet SelectClass(Connection connection, String classname, String term, int section) throws SQLException {
+	public static ResultSet SelectClassSection(Connection connection, String classname, String term, int section) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?,?)}");
 		statement.setString(1, classname);
@@ -348,7 +330,7 @@ public class ClassroomManagerApplication {
 	}
 
 
-	public static void AddStudent(Connection connection, String username, int studentID, String last, String first) throws SQLException {
+	public static void AddStudent1(Connection connection, String username, int studentID, String last, String first) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?,?,?,?)}");
 		statement.setString(1, username);
@@ -359,7 +341,7 @@ public class ClassroomManagerApplication {
 		statement.close();
 	}
 
-	public static void AddStudent(Connection connection, String username) throws SQLException {
+	public static void AddStudent2(Connection connection, String username) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?)}");
 		statement.setString(1, username);
@@ -367,7 +349,7 @@ public class ClassroomManagerApplication {
 		statement.close();
 	}
 
-	public static ResultSet ShowStudents(Connection connection, String string) throws SQLException {
+	public static ResultSet ShowStudents1(Connection connection, String string) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents(?)}");
 		statement.setString(1, string);
@@ -386,7 +368,7 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-	public static ResultSet ShowStudents(Connection connection) throws SQLException {
+	public static ResultSet ShowStudents2(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents()}");
 		resultSet = statement.executeQuery();
