@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.validation.constraints.Null;
+
 public class ClassroomManagerApplication {
 
 	private static int num;
@@ -14,6 +16,7 @@ public class ClassroomManagerApplication {
 	private Statement statement;
 	private Connection connection;
 	private static ResultSet resultSet;
+	private static int classid;
 /***
      * Splits a string up by spaces. Spaces are ignored when wrapped in quotes.
      *
@@ -27,7 +30,7 @@ public class ClassroomManagerApplication {
         return commandArguments;
     }
 	
-	public static void main(String args[]) throws ClassNotFoundException, SQLException {
+	public static void main(String args[]) throws Exception {
 
 		Connection con = null;
 		Statement stmt = null;
@@ -70,7 +73,7 @@ public class ClassroomManagerApplication {
 					System.out.println("test connection \n\tTests the database connection");
 
 					//Class Management
-					System.out.println("NewClass <Class Name> <Term> <Section Number> \n\tcreates a new class");
+					System.out.println("NewClass <Class Name> <Term> <Section Number> <Description> \n\tcreates a new class");
 					System.out.println("ListClasses \n\tlists all the classes w/ number of attending students");
 					System.out.println("SelectClass <Class Name> \n\tselects the only section of <Class Name> in the most recent term, " +
 										"if there is only one such section; if there are multiple sections it fails.");
@@ -106,9 +109,24 @@ public class ClassroomManagerApplication {
 					System.out.println("quit \n\tExits the program");
 
 				} else if (command.equals("test") && commandArguments.get(0).equals("connection")) {
-				 	Database.testConnection();
+					System.out.println("Attempting to connect to MySQL database using:");
+					System.out.printf("CS410_HOST: onyx.boisestate.edu");
+					System.out.printf("CS410_PORT: %s%n", nRemotePort);
+					System.out.printf("CS410_USERNAME: msandbox");
+					System.out.printf("CS410_PASSWORD: %s%n", strDbPassword);
+			
+					try{
+						String sql = "SELECT VERSION();";
+						CallableStatement sqlStatement = con.prepareCall(sql);
+						resultSet = sqlStatement.executeQuery(sql);
+						resultSet.next();
+						System.out.printf("Connected SUCCESS! Database Version: %s%n", resultSet.getString(1));
+					} catch (SQLException sql){
+						System.out.println("Failed to connect to database. Please make sure your connection string is correct.");
+					} finally {
+						try { resultSet.close(); } catch (Exception e) { /* ignored */ }}
 				 } else if (command.equals("NewClass")) {
-				 		NewClass(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+				 		NewClass(con, commandArguments.get(0), commandArguments.get(1), Integer.parseInt(commandArguments.get(2)), commandArguments.get(3));
 				 } else if (command.equals("ListClasses")) {
 						ListClasses(con);
 				 } else if (command.equals("SelectClass")) {
@@ -116,7 +134,7 @@ public class ClassroomManagerApplication {
 				 } else if (command.equals("SelectClassTerm")) {
 						SelectClassTerm(con, commandArguments.get(0), commandArguments.get(1));
 				 } else if (command.equals("SelectClassSection")) {
-						SelectClassSection(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
+						SelectClassSection(con, commandArguments.get(0), commandArguments.get(1), Integer.parseInt(commandArguments.get(2)));
 				 } else if (command.equals("ShowClass")) {
 						ShowClass(con);
 				 } else if (command.equals("ShowCategories")) {
@@ -124,19 +142,19 @@ public class ClassroomManagerApplication {
 				 } else if (command.equals("ShowAssignment")) {
 						ShowAssignment(con);
 				 } else if (command.equals("AddCategory")) {
-						AddCategory(con, commandArguments.get(0), commandArguments.get(1));
+						AddCategory(con, commandArguments.get(0), Double.parseDouble(commandArguments.get(1)));
 				 } else if (command.equals("AddAssignment")) {
-						AddAssignment(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+						AddAssignment(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), Integer.parseInt(commandArguments.get(3)));
 				 } else if (command.equals("AddStudent2")) {
 						AddStudent2(con, commandArguments.get(0));
 				 } else if (command.equals("AddStudent1")) {
-						AddStudent1(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+						//AddStudent1(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
 				 } else if (command.equals("ShowStudents1")) {
 						ShowStudents1(con);
 				 } else if (command.equals("ShowStudents2")) {
 						ShowStudents2(con, commandArguments.get(0));
 				 } else if (command.equals("Grade")) {
-						Grade(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
+						//Grade(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
 				 } else if (command.equals("StudentGrades")) {
 						StudentGrades(con, commandArguments.get(0));
 				 } else if (command.equals("GradeBook")) {
@@ -170,8 +188,8 @@ public class ClassroomManagerApplication {
 
 		CallableStatement statement = connection.prepareCall("{call NewClass(?,?,?,?)}");
 		statement.setString(1, className);
-		statement.setString(2, term);
-		statement.setInt(3, section);
+		statement.setInt(2, section);
+		statement.setString(3, term);
 		statement.setString(4, description);
 		statement.execute();
 		statement.close();
@@ -183,11 +201,15 @@ public class ClassroomManagerApplication {
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -195,59 +217,100 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-	public static ResultSet SelectClass(Connection connection, String classname) throws SQLException {
+	public static ResultSet SelectClass(Connection connection, String classname) throws Exception {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?)}");
 		statement.setString(1, classname);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
-		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
-				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+		boolean multipleRows = resultSet.isBeforeFirst() && resultSet.next() && !resultSet.isLast();
+		try {
+			if(multipleRows){
+				throw new IllegalArgumentException("There seem to be multiple sections of that class. Please specify with SelectClassTerm or SelectClassSection (use help to see the full list of commands and arguments)");
+			}else{
+				resultSet = statement.executeQuery();
+				for(int i = 1; i<= columnsNumber; i++){
+					System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+				}
+				System.out.println("\n");
+				while (resultSet.next()) {
+					for (int i = 1; i <= columnsNumber; i++) {
+						if(i == 1){
+							classid = resultSet.getInt(i);
+						}				
+						String columnValue = resultSet.getString(i);
+						System.out.printf("%30.30s",columnValue);
+					}
+					System.out.println("");
+				}
+				statement.close();
+				return resultSet;
 			}
-			System.out.println("");
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
 		}
-		statement.close();
+
 		return resultSet;
 	}
 
 	public static ResultSet SelectClassTerm(Connection connection, String classname, String term) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?)}");
+		CallableStatement statement = connection.prepareCall("{call SelectClassTerm(?,?)}");
 		statement.setString(1, classname);
 		statement.setString(2, term);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
-		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
-				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+		boolean multipleRows = resultSet.isBeforeFirst() && resultSet.next() && !resultSet.isLast();
+		try {
+			if(multipleRows){
+				throw new IllegalArgumentException("There seem to be multiple sections of that class. Please use  SelectClassSection (use help to see the full list of commands and arguments)");
+			}else{
+				for(int i = 1; i<= columnsNumber; i++){
+					System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+				}
+				System.out.println("\n");
+				while (resultSet.next()) {
+					for (int i = 1; i <= columnsNumber; i++) {	
+						if(i == 1){
+							classid = resultSet.getInt(i);
+						}				
+						String columnValue = resultSet.getString(i);
+						System.out.printf("%30.30s",columnValue);
+					}
+					System.out.println("");
+				}
+				statement.close();
+				return resultSet;
 			}
-			System.out.println("");
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
 		}
-		statement.close();
+
 		return resultSet;
 	}
 
 	public static ResultSet SelectClassSection(Connection connection, String classname, String term, int section) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call SelectClass(?,?,?)}");
+		CallableStatement statement = connection.prepareCall("{call SelectClassSection(?,?,?)}");
 		statement.setString(1, classname);
 		statement.setString(2, term);
 		statement.setInt(3, section);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				if(i == 1){
+					classid = resultSet.getInt(i);
+				}	
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -256,20 +319,31 @@ public class ClassroomManagerApplication {
 	}
 
 	public static ResultSet ShowClass(Connection connection) throws SQLException {
-
-		CallableStatement statement = connection.prepareCall("{call ShowClass()}");
-		resultSet = statement.executeQuery();
-		ResultSetMetaData rsmd = resultSet.getMetaData();
-		int columnsNumber = rsmd.getColumnCount();
-		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
-				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+		try {
+			if(classid == 0){
+				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
 			}
-			System.out.println("");
+			CallableStatement statement = connection.prepareCall("{call ShowClass("+classid+")}");
+			resultSet = statement.executeQuery();
+			ResultSetMetaData rsmd = resultSet.getMetaData();
+			int columnsNumber = rsmd.getColumnCount();
+			for(int i = 1; i<= columnsNumber; i++){
+				System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+			}
+			System.out.println("\n");
+			while (resultSet.next()) {
+				for (int i = 1; i <= columnsNumber; i++) {
+					
+					String columnValue = resultSet.getString(i);
+					System.out.printf("%30.30s",columnValue);
+				}
+				System.out.println("");
+			}
+			statement.close();
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
 		}
-		statement.close();
+
 		return resultSet;
 	}
 
@@ -279,11 +353,14 @@ public class ClassroomManagerApplication {
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
+		System.out.println("\n");
 		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+			for (int i = 1; i <= columnsNumber; i++) {			
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -292,12 +369,20 @@ public class ClassroomManagerApplication {
 	}
 
 	public static void AddCategory(Connection connection, String name, double weight) throws SQLException {
+		try {
+			if(classid == 0){
+				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
+			}
+			CallableStatement statement = connection.prepareCall("{call AddCategory(?,?,?)}");
+			statement.setString(1, name);
+			statement.setDouble(2, weight);
+			statement.setInt(3, classid);
+			statement.execute();
+			statement.close();
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
+		}
 
-		CallableStatement statement = connection.prepareCall("{call AddCategory(?,?)}");
-		statement.setString(1, name);
-		statement.setDouble(2, weight);
-		statement.execute();
-		statement.close();
 	}
 
 	public static ResultSet ShowAssignment(Connection connection) throws SQLException {
@@ -306,11 +391,15 @@ public class ClassroomManagerApplication {
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -331,7 +420,7 @@ public class ClassroomManagerApplication {
 
 
 	public static void AddStudent1(Connection connection, String username, int studentID, String last, String first) throws SQLException {
-
+		
 		CallableStatement statement = connection.prepareCall("{call AddStudent(?,?,?,?)}");
 		statement.setString(1, username);
 		statement.setDouble(2, studentID);
@@ -342,25 +431,57 @@ public class ClassroomManagerApplication {
 	}
 
 	public static void AddStudent2(Connection connection, String username) throws SQLException {
-
-		CallableStatement statement = connection.prepareCall("{call AddStudent(?)}");
-		statement.setString(1, username);
-		statement.execute();
-		statement.close();
+		try {
+			if(classid == 0){
+				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
+			}
+			CallableStatement statement = connection.prepareCall("{call AddStudent(?,?)}");
+			statement.setString(1, username);
+			statement.setInt(2, classid);
+			statement.execute();
+			statement.close();
+		} catch (Exception e) {
+			e.getMessage();
+		}
 	}
 
-	public static ResultSet ShowStudents1(Connection connection, String string) throws SQLException {
+
+	public static ResultSet ShowStudents1(Connection connection) throws SQLException {
+
+		CallableStatement statement = connection.prepareCall("{call ShowStudents("+classid+")}");
+		resultSet = statement.executeQuery();
+		ResultSetMetaData rsmd = resultSet.getMetaData();
+		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
+		while (resultSet.next()) {
+			for (int i = 1; i <= columnsNumber; i++) {
+				
+				String columnValue = resultSet.getString(i);
+				System.out.printf("%30.30s",columnValue);
+			}
+			System.out.println("");
+		}
+		statement.close();
+		return resultSet;
+	}
+
+	public static ResultSet ShowStudents2(Connection connection, String string) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents(?)}");
 		statement.setString(1, string);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -368,23 +489,6 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-	public static ResultSet ShowStudents2(Connection connection) throws SQLException {
-
-		CallableStatement statement = connection.prepareCall("{call ShowStudents()}");
-		resultSet = statement.executeQuery();
-		ResultSetMetaData rsmd = resultSet.getMetaData();
-		int columnsNumber = rsmd.getColumnCount();
-		while (resultSet.next()) {
-			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
-				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
-			}
-			System.out.println("");
-		}
-		statement.close();
-		return resultSet;
-	}
 
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
 
@@ -404,11 +508,14 @@ public class ClassroomManagerApplication {
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
@@ -422,11 +529,14 @@ public class ClassroomManagerApplication {
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
+		for(int i = 1; i<= columnsNumber; i++){
+			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
+		}
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				if (i > 1) System.out.print(",  ");
+				
 				String columnValue = resultSet.getString(i);
-				System.out.print(columnValue);
+				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
