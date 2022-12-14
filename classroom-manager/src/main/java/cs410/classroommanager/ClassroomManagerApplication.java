@@ -4,6 +4,7 @@ import java.sql.*;
 import java.io.*;
 import java.sql.Date;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,7 +90,7 @@ public class ClassroomManagerApplication {
 					System.out.println("AddAssignment <Assignment Name> <Category> <Description> <Points> \n\tadd a new assignment");
 
 					//Student Management
-					System.out.println("AddStudent1 <Username> <studentId> <Last Name> <First Name> \n\tadds a student and enrolls" +
+					System.out.println("AddStudent1 <Username> <studentId> <First Name Last Name > \n\tadds a student and enrolls" +
 										" them in the current class. If the student already exists, enroll them in the class");
 					System.out.println("AddStudent2 <Username> \n\tadds an already existing student to the current class");
 					System.out.println("ShowStudents1 \n\tshow all students in the current class");
@@ -148,13 +149,13 @@ public class ClassroomManagerApplication {
 				 } else if (command.equals("AddStudent2")) {
 						AddStudent2(con, commandArguments.get(0));
 				 } else if (command.equals("AddStudent1")) {
-						//AddStudent1(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2), commandArguments.get(3));
+						AddStudent1(con, commandArguments.get(0), Integer.parseInt(commandArguments.get(1)), commandArguments.get(2));
 				 } else if (command.equals("ShowStudents1")) {
 						ShowStudents1(con);
 				 } else if (command.equals("ShowStudents2")) {
 						ShowStudents2(con, commandArguments.get(0));
 				 } else if (command.equals("Grade")) {
-						//Grade(con, commandArguments.get(0), commandArguments.get(1), commandArguments.get(2));
+						Grade(con, commandArguments.get(0), commandArguments.get(1), Integer.parseInt(commandArguments.get(2)));
 				 } else if (command.equals("StudentGrades")) {
 						StudentGrades(con, commandArguments.get(0));
 				 } else if (command.equals("GradeBook")) {
@@ -408,26 +409,62 @@ public class ClassroomManagerApplication {
 	}
 
 	public static void AddAssignment(Connection connection, String name, String category, String description, int points) throws SQLException {
-
-		CallableStatement statement = connection.prepareCall("{call AddAssignment(?,?,?,?)}");
-		statement.setString(1, name);
-		statement.setString(2, category);
-		statement.setString(3, description);
-		statement.setInt(4, points);
-		statement.execute();
-		statement.close();
+		try {
+			if(classid == 0){
+				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
+			}
+			CallableStatement statement = connection.prepareCall("{call AddAssignment(?,?,?,?)}");
+			statement.setString(1, name);
+			statement.setString(2, category);
+			statement.setString(3, description);
+			statement.setInt(4, points);
+			statement.setInt(5, classid);
+			statement.execute();
+			statement.close();
+		} catch (Exception e) {
+			e.getLocalizedMessage();
+		}
 	}
 
 
-	public static void AddStudent1(Connection connection, String username, int studentID, String last, String first) throws SQLException {
-		
-		CallableStatement statement = connection.prepareCall("{call AddStudent(?,?,?,?)}");
-		statement.setString(1, username);
-		statement.setDouble(2, studentID);
-		statement.setString(3, last);
-		statement.setString(4, first);
-		statement.execute();
-		statement.close();
+	public static void AddStudent1(Connection connection, String username, int studentID, String fullname) throws SQLException {
+		try {
+			if(classid == 0){
+				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
+			}
+			CallableStatement statement = connection.prepareCall("{call GetStudentID(?)}");
+			statement.setInt(1, studentID);
+			resultSet = statement.executeQuery();
+			resultSet.next();
+			if(resultSet.getInt(1) != studentID){
+				CallableStatement statement4 = connection.prepareCall("{call ShowStudents2(?)}");
+				statement4.setString(1, fullname);
+				ResultSet resultSet2 = statement4.executeQuery();
+				resultSet2.next();
+				if(resultSet2.getString(1).toLowerCase() != fullname.toLowerCase()){
+					System.out.println("WARNING: Changing full name");
+					CallableStatement statement1 = connection.prepareCall("{call UpdateStudent(?,?)}");
+					statement1.setInt(1, studentID);
+					statement1.setString(2, fullname);
+					statement1.execute();
+					statement1.close();
+					CallableStatement statement3 = connection.prepareCall("{call AddStudent2(?,?)}");
+					statement3.setString(1, username);
+					statement3.setInt(2, classid);
+					statement3.execute();
+					statement3.close();
+				}
+			}else{
+				CallableStatement statement2 = connection.prepareCall("{call AddStudent1(?,?)}");
+				statement2.setInt(1, studentID);
+				statement2.setInt(2, classid);
+				statement2.execute();
+				statement2.close();
+			}
+			statement.close();
+		} catch (Exception e) {
+			System.err.println(e.getLocalizedMessage());
+		}
 	}
 
 	public static void AddStudent2(Connection connection, String username) throws SQLException {
@@ -448,13 +485,15 @@ public class ClassroomManagerApplication {
 
 	public static ResultSet ShowStudents1(Connection connection) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call ShowStudents("+classid+")}");
+		CallableStatement statement = connection.prepareCall("{call ShowStudents1(?)}");
+		statement.setInt(1, classid);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
 		for(int i = 1; i<= columnsNumber; i++){
 			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
 		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
 				
@@ -477,6 +516,7 @@ public class ClassroomManagerApplication {
 		for(int i = 1; i<= columnsNumber; i++){
 			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
 		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
 				
@@ -491,13 +531,34 @@ public class ClassroomManagerApplication {
 
 
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
+		try {
+			CallableStatement statement = connection.prepareCall("{call GradeExists(?,?)}");
+			statement.setString(1, assignmentName);
+			statement.setString(2, username);
+			resultSet = statement.executeQuery();
+			if(resultSet.wasNull()){
+				CallableStatement statement2 = connection.prepareCall("{call InsertGrade(?,?,?)}");
+				statement2.setString(1, assignmentName);
+				statement2.setString(2, username);
+				statement2.setInt(3, grade);
+				statement2.execute();
+				statement2.close();
+			}else{
+				CallableStatement statement3 = connection.prepareCall("{call UpdateExistingGrade(?,?,?)}");
+				statement3.setString(1, assignmentName);
+				statement3.setString(2, username);
+				statement3.setInt(3, grade);
+				statement3.execute();
+				statement3.close();
+			}
+			if(resultSet.getInt(2) < grade){
+				throw new Exception("Given grade exceeds max point value for this assignment");
+			}
+			statement.close();
+		} catch (Exception e) {
+			e.getLocalizedMessage();
+		}
 
-		CallableStatement statement = connection.prepareCall("{call Grade(?,?,?)}");
-		statement.setString(1, assignmentName);
-		statement.setString(2, username);
-		statement.setInt(3, grade);
-		statement.execute();
-		statement.close();
 	}
 
 
