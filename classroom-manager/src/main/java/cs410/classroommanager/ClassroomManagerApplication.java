@@ -532,11 +532,24 @@ public class ClassroomManagerApplication {
 
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
 		try {
+			System.out.println("IN GRADE");
+
 			CallableStatement statement = connection.prepareCall("{call GradeExists(?,?)}");
 			statement.setString(1, assignmentName);
 			statement.setString(2, username);
 			resultSet = statement.executeQuery();
-			if(resultSet.wasNull()){
+			int points;
+			boolean isEmpty = !resultSet.isBeforeFirst();
+			while (resultSet.next()) {
+				for (int i = 1; i <= 2; i++) {
+					
+					String columnValue = resultSet.getString(i);
+					System.out.printf("%30.30s",columnValue);
+				}
+				System.out.println("");
+			}
+			if(isEmpty){
+				System.out.println("Grade doesn't exist");
 				CallableStatement statement2 = connection.prepareCall("{call InsertGrade(?,?,?)}");
 				statement2.setString(1, assignmentName);
 				statement2.setString(2, username);
@@ -544,6 +557,7 @@ public class ClassroomManagerApplication {
 				statement2.execute();
 				statement2.close();
 			}else{
+				System.out.println("Grade exists");
 				CallableStatement statement3 = connection.prepareCall("{call UpdateExistingGrade(?,?,?)}");
 				statement3.setString(1, assignmentName);
 				statement3.setString(2, username);
@@ -551,12 +565,17 @@ public class ClassroomManagerApplication {
 				statement3.execute();
 				statement3.close();
 			}
+			CallableStatement statement4 = connection.prepareCall("{call GradeExists(?,?)}");
+			statement4.setString(1, assignmentName);
+			statement4.setString(2, username);
+			resultSet = statement4.executeQuery();
+			resultSet.next();
 			if(resultSet.getInt(2) < grade){
-				throw new Exception("Given grade exceeds max point value for this assignment");
+				System.out.println("WARNING: Grade exceeds max points");
 			}
-			statement.close();
+			statement4.close();
 		} catch (Exception e) {
-			e.getLocalizedMessage();
+			e.printStackTrace();
 		}
 
 	}
