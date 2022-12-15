@@ -482,7 +482,12 @@ public class ClassroomManagerApplication {
 		}
 	}
 
-
+	/***
+	 * adds a student and enrolls them in the current class. If the student already exists, enroll them in the class;
+	 * if the name provided does not match their stored name, update the name but print a warning that the name is being changed.
+	 *
+	 * @param Connection - Auto provided by code, username - student username, student id - "1", fullname - full name of the student "first last"
+	 */
 	public static void AddStudent1(Connection connection, String username, int studentID, String fullname) throws SQLException {
 		try {
 			if(classid == 0){
@@ -527,6 +532,11 @@ public class ClassroomManagerApplication {
 		}
 	}
 
+	/***
+	 * enrolls an already-existing student in the current class. If the specified student does not exist, report an error.
+	 *
+	 * @param Connection - Auto provided by code, username - username for student
+	 */
 	public static void AddStudent2(Connection connection, String username) throws SQLException {
 		try {
 			if(classid == 0){
@@ -542,7 +552,12 @@ public class ClassroomManagerApplication {
 		}
 	}
 
-
+	/***
+	 * show all students in the current class
+	 *
+	 * @param Connection - Auto provided by code
+	 * @return All students in current class
+	 */
 	public static ResultSet ShowStudents1(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents1(?)}");
@@ -566,6 +581,12 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * show all students with ‘string’ in their name or username (case-insensitive)
+	 *
+	 * @param Connection - Auto provided by code, string - used to locate any student with the string in their name
+	 * @return all students with "string" in their name
+	 */
 	public static ResultSet ShowStudents2(Connection connection, String string) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowStudents2(?)}");
@@ -589,11 +610,15 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
-
+	/***
+	 * assign the grade ‘grade’ for student with user name ‘username’ for assignment ‘assignmentname’.
+	 * If the student already has a grade for that assignment, replace it.
+	 * If the number of points exceeds the number of points configured for the assignment, print a warning (showing the number of points configured).
+	 *
+	 * @param Connection - Auto provided by code, assignment name - desired assignment, username - desired username, grade - grade for desired assignment
+	 */
 	public static void Grade(Connection connection, String assignmentName, String username, int grade) throws SQLException {
 		try {
-			System.out.println("IN GRADE");
-
 			CallableStatement statement = connection.prepareCall("{call GradeExists(?,?)}");
 			statement.setString(1, assignmentName);
 			statement.setString(2, username);
@@ -609,7 +634,6 @@ public class ClassroomManagerApplication {
 				System.out.println("");
 			}
 			if(isEmpty){
-				System.out.println("Grade doesn't exist");
 				CallableStatement statement2 = connection.prepareCall("{call InsertGrade(?,?,?)}");
 				statement2.setString(1, assignmentName);
 				statement2.setString(2, username);
@@ -617,7 +641,6 @@ public class ClassroomManagerApplication {
 				statement2.execute();
 				statement2.close();
 			}else{
-				System.out.println("Grade exists");
 				CallableStatement statement3 = connection.prepareCall("{call UpdateExistingGrade(?,?,?)}");
 				statement3.setString(1, assignmentName);
 				statement3.setString(2, username);
@@ -640,6 +663,15 @@ public class ClassroomManagerApplication {
 
 	}
 
+	/***
+	 * show student’s current grade: all assignments, visually grouped by category, with the student’s grade (if they have one).
+	 * Show subtotals for each category, along with the overall grade in the class.
+	 * Several nested calls are used to get get the Student ID, the subtotal score and
+	 * the weights of the categories for proper calculations
+	 *
+	 * @param Connection - Auto provided by code, username - desired student username
+	 * @return Students current grades for the selected class
+	 */
 	public static ResultSet StudentGrades(Connection connection, String username) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call GetStudentID(?)}");
@@ -688,6 +720,13 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+
+	/***
+	 * show the current class’s gradebook: students (username, student ID, and name), along with their total grades in the class.
+	 *
+	 * @param Connection - Auto provided by code, ClassID - Auto provided from SelectClass method
+	 * @return All total grades for all students in the selected class.
+	 */
 	public static ResultSet GradeBook(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call Gradebook(?)}");
