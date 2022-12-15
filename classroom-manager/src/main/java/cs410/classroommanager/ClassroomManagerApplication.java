@@ -7,9 +7,13 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import jakarta.validation.constraints.Null;
 
+/**
+ * Helps manage a Gradebook database by providing a variety of commands
+ * for users to add and edit the data in the database
+ * @author Kyle Shultz, Kyle Hanson, Chazz Chandler
+ */
 public class ClassroomManagerApplication {
 
 	private static int num;
@@ -18,9 +22,8 @@ public class ClassroomManagerApplication {
 	private Connection connection;
 	private static ResultSet resultSet;
 	private static int classid;
-/***
+	 /***
      * Splits a string up by spaces. Spaces are ignored when wrapped in quotes.
-     *
      * @param command - School Management System cli command
      * @return splits a string by spaces.
      */
@@ -30,7 +33,11 @@ public class ClassroomManagerApplication {
         while (m.find()) commandArguments.add(m.group(1).replace("\"", ""));
         return commandArguments;
     }
-	
+
+	/***
+	 * Main driver class
+	 * @param An array of strings representing provided args
+	 */
 	public static void main(String args[]) throws Exception {
 
 		Connection con = null;
@@ -185,6 +192,10 @@ public class ClassroomManagerApplication {
 		}
 	}
 
+	/***
+	 * Creates a new class
+	 * @param Connection - Connection to the Gradebook database
+	 */
 	public static void NewClass(Connection connection, String className, String term, int section, String description) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call NewClass(?,?,?,?)}");
@@ -196,6 +207,11 @@ public class ClassroomManagerApplication {
 		statement.close();
 	}
 
+	/***
+	 * Lists all classes in the database
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing list of classes
+	 */
 	public static ResultSet ListClasses(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ListClasses()}");
@@ -218,6 +234,12 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Selects the only section of the provided class in the most recent term, if
+	 * there is only one such section; if there are multiple sections it fails.
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing the selected class
+	 */
 	public static ResultSet SelectClass(Connection connection, String classname) throws Exception {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClass(?)}");
@@ -255,6 +277,12 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Selects the only section of the provided class and term; if
+	 * there are multiple such sections, it fails
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing the selected class
+	 */
 	public static ResultSet SelectClassTerm(Connection connection, String classname, String term) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClassTerm(?,?)}");
@@ -292,6 +320,11 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Selects a specific section from the class, term, and section provided
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing the selected class section
+	 */
 	public static ResultSet SelectClassSection(Connection connection, String classname, String term, int section) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call SelectClassSection(?,?,?)}");
@@ -319,6 +352,11 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Shows the currently active class
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing the active class
+	 */
 	public static ResultSet ShowClass(Connection connection) throws SQLException {
 		try {
 			if(classid == 0){
@@ -348,6 +386,11 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * List the categories with their weights
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet from the query containing the categories and weights
+	 */
 	public static ResultSet ShowCategories(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowCategories()}");
@@ -369,6 +412,10 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Adds a new category
+	 * @param Connection - Connection to the Gradebook database
+	 */
 	public static void AddCategory(Connection connection, String name, double weight) throws SQLException {
 		try {
 			if(classid == 0){
@@ -386,6 +433,11 @@ public class ClassroomManagerApplication {
 
 	}
 
+	/***
+	 * Lists the assignments with their point values, grouped by category
+	 * @param Connection - Connection to the Gradebook database
+	 * @return a ResultSet of the assignments
+	 */
 	public static ResultSet ShowAssignment(Connection connection) throws SQLException {
 
 		CallableStatement statement = connection.prepareCall("{call ShowAssignment()}");
@@ -408,6 +460,10 @@ public class ClassroomManagerApplication {
 		return resultSet;
 	}
 
+	/***
+	 * Adds a new assignment
+	 * @param Connection - Connection to the Gradebook database
+	 */
 	public static void AddAssignment(Connection connection, String name, String category, String description, int points) throws SQLException {
 		try {
 			if(classid == 0){
