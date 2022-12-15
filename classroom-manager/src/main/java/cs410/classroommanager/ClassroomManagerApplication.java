@@ -433,31 +433,35 @@ public class ClassroomManagerApplication {
 				throw new IllegalArgumentException("Please select a class first using SelectClass (use help to show a full list of commands and arguments)");
 			}
 			CallableStatement statement = connection.prepareCall("{call GetStudentID(?)}");
-			statement.setInt(1, studentID);
+			statement.setString(1, username);
 			resultSet = statement.executeQuery();
 			resultSet.next();
-			if(resultSet.getInt(1) != studentID){
+			int id = resultSet.getInt(1);
+			System.out.println("Id = " + id);
+			if(id == studentID){
 				CallableStatement statement4 = connection.prepareCall("{call ShowStudents2(?)}");
 				statement4.setString(1, fullname);
 				ResultSet resultSet2 = statement4.executeQuery();
 				resultSet2.next();
-				if(resultSet2.getString(1).toLowerCase() != fullname.toLowerCase()){
+				String name = resultSet2.getString(1);
+				System.out.println("name = " + name);
+				if(!name.toLowerCase().equals(fullname.toLowerCase())){
 					System.out.println("WARNING: Changing full name");
 					CallableStatement statement1 = connection.prepareCall("{call UpdateStudent(?,?)}");
 					statement1.setInt(1, studentID);
 					statement1.setString(2, fullname);
 					statement1.execute();
 					statement1.close();
-					CallableStatement statement3 = connection.prepareCall("{call AddStudent2(?,?)}");
-					statement3.setString(1, username);
-					statement3.setInt(2, classid);
-					statement3.execute();
-					statement3.close();
 				}
+				CallableStatement statement3 = connection.prepareCall("{call AddStudent2(?,?)}");
+				statement3.setInt(1, classid);
+				statement3.setInt(2, id);
+				statement3.execute();
+				statement3.close();
 			}else{
 				CallableStatement statement2 = connection.prepareCall("{call AddStudent1(?,?)}");
-				statement2.setInt(1, studentID);
-				statement2.setInt(2, classid);
+				statement2.setInt(1, classid);
+				statement2.setInt(2, studentID);
 				statement2.execute();
 				statement2.close();
 			}
@@ -508,7 +512,7 @@ public class ClassroomManagerApplication {
 
 	public static ResultSet ShowStudents2(Connection connection, String string) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call ShowStudents(?)}");
+		CallableStatement statement = connection.prepareCall("{call ShowStudents2(?)}");
 		statement.setString(1, string);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
@@ -580,38 +584,65 @@ public class ClassroomManagerApplication {
 
 	}
 
-
 	public static ResultSet StudentGrades(Connection connection, String username) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call StudentGrades(?)}");
+		CallableStatement statement = connection.prepareCall("{call GetStudentID(?)}");
 		statement.setString(1, username);
 		resultSet = statement.executeQuery();
+		resultSet.next();
+		int id = resultSet.getInt(1);
+		HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
+		statement.close();
+		int row = 2; 
+		int total = 0;
+
+		CallableStatement statement2 = connection.prepareCall("{call GetSubtotal(?)}");
+		statement2.setInt(1, id);
+		resultSet = statement2.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
 		for(int i = 1; i<= columnsNumber; i++){
 			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
 		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
-				
+				if(i == 5){
+					int columnValue = resultSet.getInt(i);
+					hm.put(row, columnValue);
+					row++;
+				}
+
 				String columnValue = resultSet.getString(i);
 				System.out.printf("%30.30s",columnValue);
 			}
 			System.out.println("");
 		}
-		statement.close();
+		statement2.close();
+		CallableStatement statement3 = connection.prepareCall("{call GetClassWeight(?)}");
+		statement3.setInt(1, classid);
+		resultSet = statement3.executeQuery();
+		row = 2;
+		while(resultSet.next()){
+			double weight = resultSet.getDouble(1);
+			total += (hm.get(row)* weight);
+			row++;
+		}
+		System.out.println("Total Grade: "+ total);
 		return resultSet;
 	}
 
 	public static ResultSet GradeBook(Connection connection) throws SQLException {
 
-		CallableStatement statement = connection.prepareCall("{call GradeBook()}");
+		CallableStatement statement = connection.prepareCall("{call Gradebook(?)}");
+		statement.setInt(1, classid);
 		resultSet = statement.executeQuery();
 		ResultSetMetaData rsmd = resultSet.getMetaData();
 		int columnsNumber = rsmd.getColumnCount();
 		for(int i = 1; i<= columnsNumber; i++){
 			System.out.printf("%1$30s", resultSet.getMetaData().getColumnName(i));
 		}
+		System.out.println("\n");
 		while (resultSet.next()) {
 			for (int i = 1; i <= columnsNumber; i++) {
 				
