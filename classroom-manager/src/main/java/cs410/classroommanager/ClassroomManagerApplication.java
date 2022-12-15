@@ -200,8 +200,8 @@ public class ClassroomManagerApplication {
 
 		CallableStatement statement = connection.prepareCall("{call NewClass(?,?,?,?)}");
 		statement.setString(1, className);
-		statement.setInt(2, section);
-		statement.setString(3, term);
+		statement.setString(2, term);
+		statement.setInt(3, section);
 		statement.setString(4, description);
 		statement.execute();
 		statement.close();
@@ -700,7 +700,6 @@ public class ClassroomManagerApplication {
 					hm.put(row, columnValue);
 					row++;
 				}
-
 				String columnValue = resultSet.getString(i);
 				System.out.printf("%30.30s",columnValue);
 			}
@@ -713,6 +712,7 @@ public class ClassroomManagerApplication {
 		row = 2;
 		while(resultSet.next()){
 			double weight = resultSet.getDouble(1);
+			System.out.println(weight);
 			total += (hm.get(row)* weight);
 			row++;
 		}
