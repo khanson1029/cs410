@@ -1,6 +1,14 @@
 create database if not exists cs410;
 use cs410;
 
+drop table if exists grades;
+drop table if exists weights;
+drop table if exists assignments;
+drop table if exists enrollments;
+drop table if exists classes;
+drop table if exists categories;
+drop table if exists students;
+
 CREATE TABLE classes(
 	id INTEGER PRIMARY KEY AUTO_INCREMENT,
     coursenum VARCHAR(50) NOT NULL,
@@ -18,7 +26,11 @@ CREATE TABLE assignments(
 	id INTEGER PRIMARY KEY AUTO_INCREMENT,
 	name VARCHAR(50) NOT NULL,
 	description VARCHAR(200)NOT NULL,
-    points INTEGER NOT NULL        
+    catid INTEGER NOT NULL,
+    points INTEGER NOT NULL,
+    classid INTEGER NOT NULL,
+    FOREIGN KEY(catid) REFERENCES categories(id),
+    FOREIGN KEY(classid) REFERENCES classes(id)
 );
 
 CREATE TABLE students(
@@ -61,14 +73,14 @@ insert into categories (name) values ('homework');
 insert into categories (name) values ('exam');
 insert into categories (name) values ('project');
 
-insert into assignments (name, description, points) values ('Homework 1', 'hw1', 100);
-insert into assignments (name, description, points) values ('Homework 2', 'hw2', 100);
-insert into assignments (name, description, points) values ('Homework 3', 'hw3', 100);
-insert into assignments (name, description, points) values ('Homework 4', 'hw4', 100);
-insert into assignments (name, description, points) values ('Midterm', 'midterm', 100);
-insert into assignments (name, description, points) values ('Final', 'final', 100);
-insert into assignments (name, description, points) values ('Project 1', 'p1', 100);
-insert into assignments (name, description, points) values ('Project 2', 'p2', 100);
+insert into assignments (name, description, catid, points, classid) values ('Homework 1', 'hw1', 1, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Homework 2', 'hw2', 1, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Homework 3', 'hw3', 1, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Homework 4', 'hw4', 1, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Midterm', 'midterm', 2, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Final', 'final', 2, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Project 1', 'p1', 3, 100, 1);
+insert into assignments (name, description, catid, points, classid) values ('Project 2', 'p2', 3, 100, 1);
 
 insert into students (name, username) values ('Pieter Heymann', 'Heymann');
 insert into students (name, username) values ('Hilliary Itzkovsky', 'Itzkovsky');
