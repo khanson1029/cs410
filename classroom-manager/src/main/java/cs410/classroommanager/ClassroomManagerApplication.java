@@ -588,7 +588,7 @@ public class ClassroomManagerApplication {
 	 * @return all students with "string" in their name
 	 */
 	public static ResultSet ShowStudents2(Connection connection, String string) throws SQLException {
-
+		System.out.println("yo");
 		CallableStatement statement = connection.prepareCall("{call ShowStudents2(?)}");
 		statement.setString(1, string);
 		resultSet = statement.executeQuery();
