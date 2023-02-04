@@ -29,19 +29,7 @@ public class ClassroomManagerApplication {
      */
     public static List<String> parseArguments(String command) {
         List<String> commandArguments = new ArrayList<String>();
-        Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(coCloses #TBD_Task_ID_or_Bug_ID
-
-TBD_Add_Additional_PR_Details_or_Delete
-
-<!--
-These HTML comments inside these brackets will not appear in the pull request (click Preview to see the final version).
-
-The pull request should be linked to either:
- - a task (i.e., use 'Closes #TaskID' or 'Resolves #TaskID')
- - a bug (i.e., use 'Closes #BugID' or 'Fixes #BugID')
-
-For more details, see: https://help.github.com/en/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword
--->mmand);
+        Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(command);
         while (m.find()) commandArguments.add(m.group(1).replace("\"", ""));
         return commandArguments;
     }
@@ -600,8 +588,7 @@ For more details, see: https://help.github.com/en/github/managing-your-work-on-g
 	 * @return all students with "string" in their name
 	 */
 	public static ResultSet ShowStudents2(Connection connection, String string) throws SQLException {
-		System.out.println("meow");
-
+		System.out.println("meowmewo");
 		CallableStatement statement = connection.prepareCall("{call ShowStudents2(?)}");
 		statement.setString(1, string);
 		resultSet = statement.executeQuery();
